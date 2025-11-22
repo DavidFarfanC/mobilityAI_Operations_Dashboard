@@ -11,7 +11,8 @@ npm run dev   # http://localhost:5173
 ## Cosas clave
 - React + TS + Tailwind (tema oscuro con verde).
 - MapLibre para el mapa; Framer Motion para animaciones.
-- Datos dummy con React Query + Zustand para selección.
+- Datos dummy con React Query + Zustand para selección y filtros.
+- Gráficas ligeras con Recharts (tendencias, severidad, estados).
 
 ## Rutas útiles
 - `src/App.tsx` arma el layout.
