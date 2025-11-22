@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #5ecf6b #0b0d10;
+}
+
+body {
+  background: radial-gradient(circle at 20% 20%, rgba(90, 247, 166, 0.05), transparent 35%),
+    radial-gradient(circle at 80% 0%, rgba(90, 247, 166, 0.05), transparent 25%),
+    #0b0d10;
+  min-height: 100vh;
+}
+
+.glass {
+  background: linear-gradient(135deg, rgba(26, 32, 44, 0.9), rgba(16, 20, 27, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+}
+
+.dot-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
