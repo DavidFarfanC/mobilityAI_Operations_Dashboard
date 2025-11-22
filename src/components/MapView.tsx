@@ -58,6 +58,7 @@ function MapView({ incidents, isLoading }: Props) {
 
     mapRef.current.on('load', () => {
       if (!mapRef.current) return;
+      // Fuente/linea principal
       mapRef.current.addSource('linea1', {
         type: 'geojson',
         data: lineGeoJson,
@@ -101,6 +102,7 @@ function MapView({ incidents, isLoading }: Props) {
       incidentMarkers.current.clear();
 
       incidents.forEach((incident) => {
+        // Marker sencillo por incidente
         const el = document.createElement('div');
         el.className =
           'w-4 h-4 rounded-full border-2 border-white shadow-lg cursor-pointer bg-accent';
@@ -130,6 +132,7 @@ function MapView({ incidents, isLoading }: Props) {
     const id = setInterval(() => {
       setTrains((prev) =>
         prev.map((train) => {
+          // Progreso circular en la linea
           const next = train.progress + train.speed;
           return { ...train, progress: next > 1 ? next - 1 : next };
         })

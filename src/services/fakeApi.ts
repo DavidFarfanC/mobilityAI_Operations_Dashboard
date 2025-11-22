@@ -11,6 +11,7 @@ const mutateIncident = (incident: Incident): Incident => {
       ? severityShift[severityIndex + 1]
       : incident.severidad;
 
+  // Simulamos avance de estado sin backend real
   const estado =
     incident.estado === 'abierto' && Math.random() > 0.8
       ? 'en camino'

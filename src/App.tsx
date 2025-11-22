@@ -24,11 +24,14 @@ function App() {
     <Layout>
       <Navbar />
       <main className="p-6 lg:p-8 space-y-6">
+        {/* KPIs arriba siempre visibles */}
         <KPIStats kpis={kpis} trend={trend} isLoading={loadingKpis || loadingIncidents} />
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+          {/* Mapa grande a la izquierda */}
           <section className="xl:col-span-8 bg-charcoal/70 border border-slate/50 rounded-2xl shadow-glass overflow-hidden">
             <MapView incidents={incidents} isLoading={loadingIncidents} />
           </section>
+          {/* Listado y detalle al lado */}
           <section className="xl:col-span-4">
             <IncidentSidebar
               incidents={incidents}
