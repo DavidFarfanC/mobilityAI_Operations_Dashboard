@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useEffect } from 'react'
 import { Incident } from '../types'
 import { ClockIcon, FlameIcon, MapIcon } from './ui/icons'
 
@@ -21,6 +22,11 @@ const severityColor: Record<string, string> = {
 }
 
 function IncidentDetailModal({ incident, onClose }: Props) {
+  // Debug: log cuando cambia el incidente
+  useEffect(() => {
+    console.log('Modal renderizado con incidente:', incident.id, incident.tipo)
+  }, [incident.id, incident.tipo])
+
   const showPhoto = Boolean(
     incident.fotoUrl &&
       Number.isFinite(incident.posicion?.lat) &&

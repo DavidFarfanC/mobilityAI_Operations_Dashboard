@@ -99,11 +99,12 @@ export type IncidentType =
   | 'medical'
   | 'security'
   | 'maintenance'
+  | 'incident'
   | 'other'
 export type IncidentLevel = 'low' | 'medium' | 'high' | 'critical'
 
 export interface IncidentReport {
-  id: number
+  id?: number
   audio_url: string
   station: string
   type: IncidentType
@@ -111,6 +112,7 @@ export interface IncidentReport {
   description: string
   incident_datetime: string
   created_at?: string
+  message?: string | null
 }
 
 export interface CreateIncidentReportRequest {
@@ -198,6 +200,7 @@ export function incidentReportToIncident(report: IncidentReport): Incident {
     medical: '🏥 Emergencia médica',
     security: '🚨 Seguridad',
     maintenance: '🔧 Mantenimiento',
+    incident: '🚨 Incidente reportado',
     other: '⚠️ Otro incidente',
   }
 
@@ -207,8 +210,13 @@ export function incidentReportToIncident(report: IncidentReport): Incident {
   else if (diffMinutes < 30) estado = 'en camino'
   else estado = 'resuelto'
 
+  // Generar ID único si no existe
+  const uniqueId = report.id 
+    ? `report-${report.id}` 
+    : `report-${report.audio_url.split('/').pop()?.split('.')[0] || Date.now()}`
+
   return {
-    id: `report-${report.id}`,
+    id: uniqueId,
     tipo: tipoMap[report.type] || report.type,
     descripcion: report.description,
     hora: incidentDate.toLocaleTimeString('es-MX', {

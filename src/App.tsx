@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import KPIStats from './components/KPIStats'
 import MapView from './components/MapView'
@@ -78,9 +78,17 @@ function App() {
 
   const selectedIncident: Incident | undefined = useMemo(
     () =>
-      filteredIncidents.find((incident) => incident.id === selectedIncidentId),
-    [filteredIncidents, selectedIncidentId]
+      incidents.find((incident) => incident.id === selectedIncidentId),
+    [incidents, selectedIncidentId]
   )
+
+  // Debug: log cuando cambia el incidente seleccionado
+  useEffect(() => {
+    if (selectedIncidentId) {
+      console.log('Incidente seleccionado ID:', selectedIncidentId)
+      console.log('Incidente encontrado:', selectedIncident?.tipo, selectedIncident?.id)
+    }
+  }, [selectedIncidentId, selectedIncident])
 
   return (
     <Layout>
@@ -118,9 +126,10 @@ function App() {
         </div>
         <AnalyticsPanel incidents={filteredIncidents} trend={trend} />
       </main>
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {selectedIncident && (
           <IncidentDetailModal
+            key={selectedIncident.id}
             incident={selectedIncident}
             onClose={() => setSelectedIncident(undefined)}
           />
