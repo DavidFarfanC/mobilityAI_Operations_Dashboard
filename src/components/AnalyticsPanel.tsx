@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+import { Rectangle } from 'recharts';
 import {
   ResponsiveContainer,
   LineChart,
@@ -24,6 +26,10 @@ const palette = ['#7ae582', '#d97706', '#f97316', '#ef4444'];
 function AnalyticsPanel({ incidents, trend }: Props) {
   const severityData = buildSeverityData(incidents);
   const statusData = buildStatusData(incidents);
+  const trendData = useMemo(() => {
+    if (trend && trend.porHora?.length && trend.porDia?.length) return trend;
+    return fallbackTrend();
+  }, [trend]);
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
@@ -34,7 +40,20 @@ function AnalyticsPanel({ incidents, trend }: Props) {
             <XAxis dataKey="label" stroke="#9ca3af" />
             <YAxis stroke="#9ca3af" />
             <Tooltip contentStyle={{ background: '#0f1621', border: '1px solid #1f2937' }} />
-            <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+            <Bar
+              dataKey="value"
+              radius={[8, 8, 0, 0]}
+              cursor={{ fill: 'rgba(122,229,130,0.06)' }}
+              activeBar={(props) => (
+                <Rectangle
+                  {...props}
+                  fill={props.fill}
+                  radius={[8, 8, 0, 0]}
+                  stroke="none"
+                  opacity={0.9}
+                />
+              )}
+            >
               {severityData.map((_, idx) => (
                 <Cell key={idx} fill={palette[idx % palette.length]} />
               ))}
@@ -45,7 +64,7 @@ function AnalyticsPanel({ incidents, trend }: Props) {
 
       <ChartCard title="Tendencia por hora">
         <ResponsiveContainer width="100%" height={220}>
-          <LineChart data={trend?.porHora}>
+          <LineChart data={trendData.porHora}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
             <XAxis dataKey="label" stroke="#9ca3af" />
             <YAxis stroke="#9ca3af" />
@@ -118,3 +137,25 @@ const buildStatusData = (incidents: Incident[]) => {
   });
   return Object.entries(grouped).map(([label, value]) => ({ label, value }));
 };
+
+const fallbackTrend = (): TrendResponse => ({
+  porHora: [
+    { label: '7h', value: 6 },
+    { label: '8h', value: 9 },
+    { label: '9h', value: 11 },
+    { label: '10h', value: 8 },
+    { label: '11h', value: 7 },
+    { label: '12h', value: 5 },
+    { label: '13h', value: 6 },
+    { label: '14h', value: 4 },
+  ],
+  porDia: [
+    { label: 'L', value: 12 },
+    { label: 'M', value: 14 },
+    { label: 'X', value: 10 },
+    { label: 'J', value: 11 },
+    { label: 'V', value: 15 },
+    { label: 'S', value: 7 },
+    { label: 'D', value: 5 },
+  ],
+});
