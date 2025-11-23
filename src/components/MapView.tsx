@@ -8,7 +8,12 @@ import {
   Station as BackendStation,
 } from '../types'
 import { useUiStore } from '../store/uiStore'
-import { useLineStatus, useStations } from '../services/hooks'
+import {
+  useLineStatus,
+  useStations,
+  useLine2Status,
+  useLine2Stations,
+} from '../services/hooks'
 import { TrainIcon } from './ui/icons'
 
 type Props = {
@@ -48,15 +53,21 @@ const getIncidentColor = (severity: string): string => {
 
 // Componente que usa useMap para acceder a la instancia del mapa
 function MapContent({
-  stations,
-  lineStatus,
+  line1Stations,
+  line1Status,
+  line2Stations,
+  line2Status,
   incidents,
   setSelectedIncident,
+  selectedLine,
 }: {
-  stations?: BackendStation[]
-  lineStatus: any
+  line1Stations?: BackendStation[]
+  line1Status: any
+  line2Stations?: BackendStation[]
+  line2Status: any
   incidents: Incident[]
   setSelectedIncident: (id: string) => void
+  selectedLine: 'all' | 'L1' | 'L2'
 }) {
   const map = useMap()
   const markersRef = useRef<google.maps.Marker[]>([])
@@ -77,22 +88,45 @@ function MapContent({
       infoWindowRef.current = new google.maps.InfoWindow()
     }
 
-    if (stations && stations.length > 0) {
-      const linePath = stations.map((s) => ({
+    // Dibujar Línea 1 (rosa)
+    if (line1Stations && line1Stations.length > 0 && selectedLine !== 'L2') {
+      const linePath = line1Stations.map((s) => ({
         lat: s.latitude,
         lng: s.longitude,
       }))
-      lineRef.current = new google.maps.Polyline({
+      const line1 = new google.maps.Polyline({
         path: linePath,
         geodesic: true,
         strokeColor: '#ec4899',
         strokeOpacity: 0.9,
         strokeWeight: 5,
       })
-      lineRef.current.setMap(map)
+      line1.setMap(map)
     }
 
-    stations?.forEach((station) => {
+    // Dibujar Línea 2 (azul)
+    if (line2Stations && line2Stations.length > 0 && selectedLine !== 'L1') {
+      const linePath = line2Stations.map((s) => ({
+        lat: s.latitude,
+        lng: s.longitude,
+      }))
+      const line2 = new google.maps.Polyline({
+        path: linePath,
+        geodesic: true,
+        strokeColor: '#3b82f6',
+        strokeOpacity: 0.9,
+        strokeWeight: 5,
+      })
+      line2.setMap(map)
+    }
+
+    // Renderizar estaciones de ambas líneas
+    const allStations = [
+      ...(selectedLine !== 'L2' && line1Stations ? line1Stations : []),
+      ...(selectedLine !== 'L1' && line2Stations ? line2Stations : []),
+    ]
+
+    allStations.forEach((station) => {
       const marker = new google.maps.Marker({
         position: { lat: station.latitude, lng: station.longitude },
         map,
@@ -141,11 +175,25 @@ function MapContent({
       markersRef.current.push(marker)
     })
 
-    lineStatus?.active_trains?.forEach((train: BackendTrain) => {
-      const currentStation = stations?.find(
+    // Renderizar trenes de ambas líneas
+    const allTrains = [
+      ...(selectedLine !== 'L2' && line1Status?.active_trains
+        ? line1Status.active_trains.map((t: any) => ({ ...t, line: 'L1' }))
+        : []),
+      ...(selectedLine !== 'L1' && line2Status?.active_trains
+        ? line2Status.active_trains.map((t: any) => ({ ...t, line: 'L2' }))
+        : []),
+    ]
+
+    allTrains.forEach((train: BackendTrain & { line: string }) => {
+      const stationsToSearch =
+        train.line === 'L1' ? line1Stations : line2Stations
+      const currentStation = stationsToSearch?.find(
         (s) => s.name === train.current_station
       )
-      const nextStation = stations?.find((s) => s.name === train.next_station)
+      const nextStation = stationsToSearch?.find(
+        (s) => s.name === train.next_station
+      )
 
       if (!currentStation || !nextStation) return
 
@@ -271,28 +319,49 @@ function MapContent({
       markersRef.current.forEach((m) => m.setMap(null))
       if (lineRef.current) lineRef.current.setMap(null)
     }
-  }, [map, stations, lineStatus, incidents, setSelectedIncident])
+  }, [
+    map,
+    line1Stations,
+    line1Status,
+    line2Stations,
+    line2Status,
+    incidents,
+    setSelectedIncident,
+    selectedLine,
+  ])
 
   return null
 }
 
 function MapView({ incidents, isLoading }: Props) {
-  const { setSelectedIncident } = useUiStore()
+  const { setSelectedIncident, selectedLine, setSelectedLine } = useUiStore()
 
-  const { data: lineStatus, isLoading: loadingLine } = useLineStatus()
-  const { data: stations, isLoading: loadingStations } = useStations()
+  const { data: line1Status, isLoading: loadingLine1 } = useLineStatus()
+  const { data: line1Stations, isLoading: loadingStations1 } = useStations()
+  const { data: line2Status, isLoading: loadingLine2 } = useLine2Status()
+  const { data: line2Stations, isLoading: loadingStations2 } = useLine2Stations()
 
   const mapCenter = { lat: 19.4326, lng: -99.1332 }
 
   const stats = useMemo(() => {
-    if (!lineStatus || !stations) return null
+    const trains1 = selectedLine !== 'L2' && line1Status ? line1Status.active_trains.length : 0
+    const trains2 = selectedLine !== 'L1' && line2Status ? line2Status.active_trains.length : 0
+    const activeTrains = trains1 + trains2
 
-    const activeTrains = lineStatus.active_trains.length
-    const totalPeople = stations.reduce((sum, s) => sum + s.people_waiting, 0)
-    const incidentsCount = stations.filter((s) => s.has_incident).length
+    const people1 = selectedLine !== 'L2' && line1Stations ? line1Stations.reduce((sum, s) => sum + s.people_waiting, 0) : 0
+    const people2 = selectedLine !== 'L1' && line2Stations ? line2Stations.reduce((sum, s) => sum + s.people_waiting, 0) : 0
+    const totalPeople = people1 + people2
 
-    return { activeTrains, totalPeople, incidentsCount }
-  }, [lineStatus, stations])
+    const inc1 = selectedLine !== 'L2' && line1Stations ? line1Stations.filter((s) => s.has_incident).length : 0
+    const inc2 = selectedLine !== 'L1' && line2Stations ? line2Stations.filter((s) => s.has_incident).length : 0
+    const incidentsCount = inc1 + inc2
+
+    const stations1 = selectedLine !== 'L2' && line1Stations ? line1Stations.length : 0
+    const stations2 = selectedLine !== 'L1' && line2Stations ? line2Stations.length : 0
+    const totalStations = stations1 + stations2
+
+    return { activeTrains, totalPeople, incidentsCount, totalStations }
+  }, [line1Status, line1Stations, line2Status, line2Stations, selectedLine])
 
   if (!GOOGLE_MAPS_API_KEY) {
     return (
@@ -325,10 +394,13 @@ function MapView({ incidents, isLoading }: Props) {
           style={{ width: '100%', height: '100%' }}
         />
         <MapContent
-          stations={stations}
-          lineStatus={lineStatus}
+          line1Stations={line1Stations}
+          line1Status={line1Status}
+          line2Stations={line2Stations}
+          line2Status={line2Status}
           incidents={incidents}
           setSelectedIncident={setSelectedIncident}
+          selectedLine={selectedLine}
         />
       </APIProvider>
 
@@ -337,26 +409,72 @@ function MapView({ incidents, isLoading }: Props) {
         animate={{ opacity: 1, y: 0 }}
         className="absolute top-4 left-4 bg-slate/90 backdrop-blur-sm border border-slate/60 rounded-2xl p-4 text-sm text-muted shadow-glass max-w-sm"
       >
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-3">
           <p className="text-white font-semibold font-display text-lg">
-            {lineStatus?.line_name || 'Línea 1'} · Metro CDMX
+            Metro CDMX
           </p>
-          {loadingLine && (
+          {(loadingLine1 || loadingLine2) && (
             <div className="animate-spin rounded-full h-4 w-4 border-2 border-accent border-t-transparent" />
           )}
         </div>
 
-        {lineStatus && (
-          <>
-            <p className="text-accent mb-2">{lineStatus.route}</p>
+        {/* Selector de líneas */}
+        <div className="flex gap-2 mb-3">
+          <button
+            onClick={() => setSelectedLine('all')}
+            className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+              selectedLine === 'all'
+                ? 'bg-accent text-charcoal'
+                : 'bg-charcoal/50 text-muted hover:bg-charcoal/70'
+            }`}
+          >
+            Todas
+          </button>
+          <button
+            onClick={() => setSelectedLine('L1')}
+            className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+              selectedLine === 'L1'
+                ? 'bg-pink-500 text-white'
+                : 'bg-charcoal/50 text-muted hover:bg-charcoal/70'
+            }`}
+          >
+            Línea 1
+          </button>
+          <button
+            onClick={() => setSelectedLine('L2')}
+            className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+              selectedLine === 'L2'
+                ? 'bg-blue-500 text-white'
+                : 'bg-charcoal/50 text-muted hover:bg-charcoal/70'
+            }`}
+          >
+            Línea 2
+          </button>
+        </div>
 
-            {lineStatus.incident_type !== 'none' && (
-              <div className="mb-3 p-2 bg-red-500/20 border border-red-500/50 rounded-lg">
-                <p className="text-red-400 font-semibold text-xs">
-                  ⚠️ {lineStatus.incident_message}
-                </p>
-              </div>
-            )}
+        {(line1Status || line2Status) && (
+          <>
+            {/* Incidentes de Línea 1 */}
+            {selectedLine !== 'L2' &&
+              line1Status &&
+              line1Status.incident_type !== 'none' && (
+                <div className="mb-2 p-2 bg-red-500/20 border border-red-500/50 rounded-lg">
+                  <p className="text-red-400 font-semibold text-xs">
+                    🚇 L1: {line1Status.incident_message}
+                  </p>
+                </div>
+              )}
+
+            {/* Incidentes de Línea 2 */}
+            {selectedLine !== 'L1' &&
+              line2Status &&
+              line2Status.incident_type !== 'none' && (
+                <div className="mb-3 p-2 bg-red-500/20 border border-red-500/50 rounded-lg">
+                  <p className="text-red-400 font-semibold text-xs">
+                    🚇 L2: {line2Status.incident_message}
+                  </p>
+                </div>
+              )}
 
             {stats && (
               <div className="grid grid-cols-3 gap-2 mb-3">
@@ -397,15 +515,13 @@ function MapView({ incidents, isLoading }: Props) {
               <p className="mt-2 text-[10px]">
                 ⏱️ Actualización cada 3 segundos
               </p>
-              <p className="text-[10px]">
-                📍 {stations?.length || 20} estaciones
-              </p>
+              <p className="text-[10px]">📍 {stats?.totalStations || 0} estaciones</p>
             </div>
           </>
         )}
       </motion.div>
 
-      {(isLoading || loadingStations) && (
+      {(isLoading || loadingStations1 || loadingStations2) && (
         <div className="absolute inset-0 grid place-items-center bg-graphite/70 backdrop-blur-sm pointer-events-none">
           <div className="flex items-center gap-3 text-muted bg-charcoal/90 px-4 py-3 rounded-lg">
             <TrainIcon className="h-5 w-5 animate-pulse" />

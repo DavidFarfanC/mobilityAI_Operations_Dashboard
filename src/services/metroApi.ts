@@ -2,8 +2,10 @@ import { apiClient } from '../config/api'
 import { LineStatus, Station } from '../types'
 
 /**
- * Servicio para consumir los endpoints del Metro Line 1
+ * Servicio para consumir los endpoints del Metro (Línea 1 y Línea 2)
  */
+
+// ==================== LÍNEA 1 ====================
 
 /**
  * Obtiene el estado actual de la Línea 1 con todos los trenes activos
@@ -29,6 +31,36 @@ export const getStations = async (): Promise<Station[]> => {
     return response.data
   } catch (error) {
     console.error('Error fetching stations:', error)
+    throw error
+  }
+}
+
+// ==================== LÍNEA 2 ====================
+
+/**
+ * Obtiene el estado actual de la Línea 2 (Azul) con todos los trenes activos
+ * Endpoint: GET /metro/line2/status
+ */
+export const getLine2Status = async (): Promise<LineStatus> => {
+  try {
+    const response = await apiClient.get<LineStatus>('/metro/line2/status')
+    return response.data
+  } catch (error) {
+    console.error('Error fetching line 2 status:', error)
+    throw error
+  }
+}
+
+/**
+ * Obtiene información de todas las estaciones de la Línea 2 (Azul)
+ * Endpoint: GET /metro/line2/stations
+ */
+export const getLine2Stations = async (): Promise<Station[]> => {
+  try {
+    const response = await apiClient.get<Station[]>('/metro/line2/stations')
+    return response.data
+  } catch (error) {
+    console.error('Error fetching line 2 stations:', error)
     throw error
   }
 }

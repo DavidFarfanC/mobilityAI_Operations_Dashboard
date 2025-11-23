@@ -6,9 +6,19 @@ import {
   LineStatus,
   Station,
   FallDetection,
+  IncidentReport,
 } from '../types'
-import { getLineStatus, getStations } from './metroApi'
+import {
+  getLineStatus,
+  getStations,
+  getLine2Status,
+  getLine2Stations,
+} from './metroApi'
 import { getFallDetections, getRecentFallDetections } from './fallDetectionApi'
+import {
+  getIncidentReports,
+  getRecentIncidentReports,
+} from './incidentReportApi'
 
 // ===== HOOKS ORIGINALES (fake data) =====
 
@@ -60,6 +70,30 @@ export const useStations = () =>
   })
 
 /**
+ * Hook para obtener el estado de la Línea 2 en tiempo real
+ * Se actualiza cada 3 segundos
+ */
+export const useLine2Status = () =>
+  useQuery<LineStatus>({
+    queryKey: ['metro', 'line2', 'status'],
+    queryFn: getLine2Status,
+    refetchInterval: 3000,
+    staleTime: 2000,
+  })
+
+/**
+ * Hook para obtener todas las estaciones de la Línea 2
+ * Se actualiza cada 5 segundos
+ */
+export const useLine2Stations = () =>
+  useQuery<Station[]>({
+    queryKey: ['metro', 'line2', 'stations'],
+    queryFn: getLine2Stations,
+    refetchInterval: 5000,
+    staleTime: 3000,
+  })
+
+/**
  * Hook para obtener todos los incidentes de caídas
  */
 export const useFallDetections = (skip: number = 0, limit: number = 100) =>
@@ -77,6 +111,30 @@ export const useRecentFallDetections = () =>
   useQuery<FallDetection[]>({
     queryKey: ['fallDetections', 'recent'],
     queryFn: getRecentFallDetections,
+    refetchInterval: 10000,
+    staleTime: 5000,
+  })
+
+// ===== HOOKS PARA INCIDENT REPORTS =====
+
+/**
+ * Hook para obtener todos los reportes de incidentes
+ */
+export const useIncidentReports = (skip: number = 0, limit: number = 100) =>
+  useQuery<IncidentReport[]>({
+    queryKey: ['incidentReports', skip, limit],
+    queryFn: () => getIncidentReports(skip, limit),
+    refetchInterval: 10000, // Actualización cada 10 segundos
+    staleTime: 5000,
+  })
+
+/**
+ * Hook para obtener reportes de incidentes recientes (últimas 24 horas)
+ */
+export const useRecentIncidentReports = () =>
+  useQuery<IncidentReport[]>({
+    queryKey: ['incidentReports', 'recent'],
+    queryFn: getRecentIncidentReports,
     refetchInterval: 10000,
     staleTime: 5000,
   })

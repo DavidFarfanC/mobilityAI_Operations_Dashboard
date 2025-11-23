@@ -11,6 +11,7 @@ export type Incident = {
   linea: string
   posicion: { lat: number; lng: number }
   fotoUrl?: string
+  audioUrl?: string
   detalles?: string[]
   accionesSugeridas?: string[]
 }
@@ -92,6 +93,35 @@ export interface FallDetectionResponse {
   fall_detection: FallDetection
 }
 
+// Tipos para Incident Reports (API)
+export type IncidentType = 'fire' | 'medical' | 'security' | 'maintenance' | 'other'
+export type IncidentLevel = 'low' | 'medium' | 'high' | 'critical'
+
+export interface IncidentReport {
+  id: number
+  audio_url: string
+  station: string
+  type: IncidentType
+  level: IncidentLevel
+  description: string
+  incident_datetime: string
+  created_at?: string
+}
+
+export interface CreateIncidentReportRequest {
+  audio: File
+  station: string
+  type: IncidentType
+  level: IncidentLevel
+  description: string
+  incident_datetime: string
+}
+
+export interface IncidentReportResponse {
+  message: string
+  incident_report: IncidentReport
+}
+
 // Utilidad para transformar FallDetection a Incident
 export function fallDetectionToIncident(
   fallDetection: FallDetection
@@ -138,6 +168,86 @@ export function fallDetectionToIncident(
       'Revisar cámaras de seguridad cercanas',
       'Contactar a servicios de emergencia si es necesario',
     ],
+  }
+}
+
+// Utilidad para transformar IncidentReport a Incident
+export function incidentReportToIncident(
+  report: IncidentReport
+): Incident {
+  const incidentDate = new Date(report.incident_datetime)
+  const now = new Date()
+  const diffMinutes = Math.floor(
+    (now.getTime() - incidentDate.getTime()) / 60000
+  )
+
+  // Mapear level a severidad
+  const severidadMap: Record<IncidentLevel, Severity> = {
+    low: 'baja',
+    medium: 'media',
+    high: 'alta',
+    critical: 'critica',
+  }
+
+  // Mapear type a descripción
+  const tipoMap: Record<IncidentType, string> = {
+    fire: '🔥 Incendio',
+    medical: '🏥 Emergencia médica',
+    security: '🚨 Seguridad',
+    maintenance: '🔧 Mantenimiento',
+    other: '⚠️ Otro incidente',
+  }
+
+  // Determinar estado basado en el tiempo
+  let estado: IncidentStatus = 'abierto'
+  if (diffMinutes < 2) estado = 'abierto'
+  else if (diffMinutes < 30) estado = 'en camino'
+  else estado = 'resuelto'
+
+  return {
+    id: `report-${report.id}`,
+    tipo: tipoMap[report.type] || report.type,
+    descripcion: report.description,
+    hora: incidentDate.toLocaleTimeString('es-MX', {
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
+    severidad: severidadMap[report.level],
+    estado,
+    linea: report.station,
+    posicion: getStationCoordinates(report.station),
+    audioUrl: report.audio_url, // Agregar el audio URL
+    detalles: [
+      `Hora del reporte: ${incidentDate.toLocaleString('es-MX')}`,
+      `Tipo: ${tipoMap[report.type]}`,
+      `Nivel: ${report.level}`,
+      `ID del reporte: ${report.id}`,
+      report.audio_url ? `Audio disponible` : '',
+    ].filter(Boolean),
+    accionesSugeridas:
+      report.type === 'fire'
+        ? [
+            'Activar protocolo de evacuación',
+            'Contactar a bomberos',
+            'Verificar sistemas contra incendios',
+          ]
+        : report.type === 'medical'
+        ? [
+            'Enviar personal médico inmediatamente',
+            'Contactar a servicios de emergencia',
+            'Despejar el área',
+          ]
+        : report.type === 'security'
+        ? [
+            'Enviar personal de seguridad',
+            'Revisar cámaras de vigilancia',
+            'Contactar autoridades si es necesario',
+          ]
+        : [
+            'Evaluar la situación',
+            'Enviar personal apropiado',
+            'Mantener comunicación con la estación',
+          ],
   }
 }
 

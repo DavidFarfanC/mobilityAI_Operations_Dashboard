@@ -61,7 +61,17 @@ function IncidentSidebar({ incidents, selectedIncident, onSelect, isLoading, com
               <p className="text-sm text-muted">{incident.descripcion}</p>
               <div className="mt-2 flex items-center gap-2 text-xs">
                 <StatusBadge status={incident.estado} />
-                <ArrowUpRight className="h-4 w-4 text-accent" />
+                {incident.fotoUrl && (
+                  <span className="px-2 py-1 rounded-lg bg-blue-500/15 text-blue-200 border border-blue-500/30">
+                    📷 Foto
+                  </span>
+                )}
+                {incident.audioUrl && (
+                  <span className="px-2 py-1 rounded-lg bg-purple-500/15 text-purple-200 border border-purple-500/30">
+                    🎤 Audio
+                  </span>
+                )}
+                <ArrowUpRight className="h-4 w-4 text-accent ml-auto" />
               </div>
             </motion.button>
           ))}

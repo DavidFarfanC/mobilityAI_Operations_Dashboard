@@ -27,6 +27,9 @@ function IncidentDetailModal({ incident, onClose }: Props) {
       Number.isFinite(incident.posicion?.lng)
   );
 
+  const showAudio = Boolean(incident.audioUrl);
+  const hasMedia = showPhoto || showAudio;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -43,7 +46,7 @@ function IncidentDetailModal({ incident, onClose }: Props) {
         className="w-full max-w-5xl rounded-2xl bg-slate border border-slate/60 shadow-2xl shadow-black/30 p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className={`grid gap-6 ${showPhoto ? 'md:grid-cols-[1.6fr_1fr]' : ''}`}>
+        <div className={`grid gap-6 ${hasMedia ? 'md:grid-cols-[1.6fr_1fr]' : ''}`}>
           <div className="space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
@@ -116,16 +119,40 @@ function IncidentDetailModal({ incident, onClose }: Props) {
             ) : null}
           </div>
 
-          {showPhoto && (
-            <div className="h-full">
-              <div className="overflow-hidden rounded-xl border border-slate/60 bg-charcoal/50 h-full">
-                <img
-                  src={incident.fotoUrl}
-                  alt={`Evidencia del incidente ${incident.tipo}`}
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              </div>
+          {hasMedia && (
+            <div className="h-full space-y-4">
+              {showPhoto && (
+                <div className="overflow-hidden rounded-xl border border-slate/60 bg-charcoal/50">
+                  <img
+                    src={incident.fotoUrl}
+                    alt={`Evidencia del incidente ${incident.tipo}`}
+                    className="w-full object-cover"
+                    style={{ maxHeight: '400px' }}
+                    loading="lazy"
+                  />
+                </div>
+              )}
+              
+              {showAudio && (
+                <div className="rounded-xl border border-slate/60 bg-charcoal/50 p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted mb-3">
+                    🎤 Audio del Reporte
+                  </p>
+                  <audio
+                    controls
+                    className="w-full"
+                    style={{
+                      filter: 'invert(1) hue-rotate(180deg)',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    <source src={incident.audioUrl} type="audio/mpeg" />
+                    <source src={incident.audioUrl} type="audio/wav" />
+                    <source src={incident.audioUrl} type="audio/ogg" />
+                    Tu navegador no soporta el elemento de audio.
+                  </audio>
+                </div>
+              )}
             </div>
           )}
         </div>

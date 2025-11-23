@@ -11,12 +11,14 @@ import {
   useKpis,
   useTrend,
   useFallDetections,
+  useIncidentReports,
 } from './services/hooks'
 import {
   Incident,
   IncidentStatus,
   Severity,
   fallDetectionToIncident,
+  incidentReportToIncident,
 } from './types'
 import { useUiStore } from './store/uiStore'
 import FilterBar from './components/FilterBar'
@@ -27,10 +29,26 @@ function App() {
   const { data: fallDetections = [], isLoading: loadingFallDetections } =
     useFallDetections(0, 50)
 
+  // Obtener incident reports del backend
+  const { data: incidentReports = [], isLoading: loadingIncidentReports } =
+    useIncidentReports(0, 50)
+
   // Transformar fall detections a incidents
-  const backendIncidents = useMemo(
+  const fallDetectionIncidents = useMemo(
     () => fallDetections.map(fallDetectionToIncident),
     [fallDetections]
+  )
+
+  // Transformar incident reports a incidents
+  const reportIncidents = useMemo(
+    () => incidentReports.map(incidentReportToIncident),
+    [incidentReports]
+  )
+
+  // Combinar ambos tipos de incidentes
+  const backendIncidents = useMemo(
+    () => [...fallDetectionIncidents, ...reportIncidents],
+    [fallDetectionIncidents, reportIncidents]
   )
 
   // Mantener los datos fake para KPIs y trend (por ahora)
@@ -41,7 +59,7 @@ function App() {
   // Combinar incidents reales con fake (o usar solo reales)
   const incidents =
     backendIncidents.length > 0 ? backendIncidents : fakeIncidents
-  const loadingIncidents = loadingFallDetections
+  const loadingIncidents = loadingFallDetections || loadingIncidentReports
   const { selectedIncidentId, setSelectedIncident } = useUiStore()
   const [severityFilter, setSeverityFilter] = useState<Severity | 'all'>('all')
   const [statusFilter, setStatusFilter] = useState<IncidentStatus | 'all'>(
