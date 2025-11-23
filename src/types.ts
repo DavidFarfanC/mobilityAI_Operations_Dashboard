@@ -211,8 +211,8 @@ export function incidentReportToIncident(report: IncidentReport): Incident {
   else estado = 'resuelto'
 
   // Generar ID único si no existe
-  const uniqueId = report.id 
-    ? `report-${report.id}` 
+  const uniqueId = report.id
+    ? `report-${report.id}`
     : `report-${report.audio_url.split('/').pop()?.split('.')[0] || Date.now()}`
 
   return {

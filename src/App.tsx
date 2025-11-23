@@ -77,8 +77,7 @@ function App() {
   )
 
   const selectedIncident: Incident | undefined = useMemo(
-    () =>
-      incidents.find((incident) => incident.id === selectedIncidentId),
+    () => incidents.find((incident) => incident.id === selectedIncidentId),
     [incidents, selectedIncidentId]
   )
 
@@ -86,7 +85,11 @@ function App() {
   useEffect(() => {
     if (selectedIncidentId) {
       console.log('Incidente seleccionado ID:', selectedIncidentId)
-      console.log('Incidente encontrado:', selectedIncident?.tipo, selectedIncident?.id)
+      console.log(
+        'Incidente encontrado:',
+        selectedIncident?.tipo,
+        selectedIncident?.id
+      )
     }
   }, [selectedIncidentId, selectedIncident])
 
