@@ -1,4 +1,4 @@
-import { Incident } from '../types';
+import { Incident } from '../types'
 
 export const linea1Coordinates: [number, number][] = [
   [-99.2009, 19.3986], // Observatorio
@@ -21,7 +21,7 @@ export const linea1Coordinates: [number, number][] = [
   [-99.0885, 19.4173], // Gómez Farías
   [-99.0837, 19.4133], // Zaragoza
   [-99.072, 19.4156], // Pantitlán
-];
+]
 
 export const linea1Stations = [
   'Observatorio',
@@ -44,7 +44,7 @@ export const linea1Stations = [
   'Gómez Farías',
   'Zaragoza',
   'Pantitlán',
-];
+]
 
 export const baseIncidents: Incident[] = [
   {
@@ -86,4 +86,4 @@ export const baseIncidents: Incident[] = [
     estado: 'resuelto',
     posicion: { lat: 19.4208, lng: -99.1761 },
   },
-];
+]
