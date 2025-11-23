@@ -1,34 +1,34 @@
-import { motion } from 'framer-motion';
-import { Incident } from '../types';
-import { ClockIcon, FlameIcon, MapIcon } from './ui/icons';
+import { motion } from 'framer-motion'
+import { Incident } from '../types'
+import { ClockIcon, FlameIcon, MapIcon } from './ui/icons'
 
 type Props = {
-  incident: Incident;
-  onClose: () => void;
-};
+  incident: Incident
+  onClose: () => void
+}
 
 const statusColor: Record<string, string> = {
   abierto: 'bg-red-500/15 text-red-100 border-red-500/30',
   'en camino': 'bg-amber-500/15 text-amber-100 border-amber-500/30',
   resuelto: 'bg-emerald-500/15 text-emerald-100 border-emerald-500/30',
-};
+}
 
 const severityColor: Record<string, string> = {
   baja: 'bg-emerald-500/15 text-emerald-200 border-emerald-500/30',
   media: 'bg-amber-500/15 text-amber-100 border-amber-500/30',
   alta: 'bg-orange-500/15 text-orange-100 border-orange-500/30',
   critica: 'bg-red-500/15 text-red-100 border-red-500/30',
-};
+}
 
 function IncidentDetailModal({ incident, onClose }: Props) {
   const showPhoto = Boolean(
     incident.fotoUrl &&
       Number.isFinite(incident.posicion?.lat) &&
       Number.isFinite(incident.posicion?.lng)
-  );
+  )
 
-  const showAudio = Boolean(incident.audioUrl);
-  const hasMedia = showPhoto || showAudio;
+  const showAudio = Boolean(incident.audioUrl)
+  const hasMedia = showPhoto || showAudio
 
   return (
     <motion.div
@@ -46,7 +46,9 @@ function IncidentDetailModal({ incident, onClose }: Props) {
         className="w-full max-w-5xl rounded-2xl bg-slate border border-slate/60 shadow-2xl shadow-black/30 p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className={`grid gap-6 ${hasMedia ? 'md:grid-cols-[1.6fr_1fr]' : ''}`}>
+        <div
+          className={`grid gap-6 ${hasMedia ? 'md:grid-cols-[1.6fr_1fr]' : ''}`}
+        >
           <div className="space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
@@ -57,7 +59,9 @@ function IncidentDetailModal({ incident, onClose }: Props) {
                   <p className="text-xs uppercase tracking-[0.18em] text-muted">
                     {incident.linea}
                   </p>
-                  <p className="text-xl font-display font-semibold text-white">{incident.tipo}</p>
+                  <p className="text-xl font-display font-semibold text-white">
+                    {incident.tipo}
+                  </p>
                 </div>
               </div>
               <button
@@ -68,7 +72,9 @@ function IncidentDetailModal({ incident, onClose }: Props) {
               </button>
             </div>
 
-            <p className="text-sm leading-relaxed text-white/90">{incident.descripcion}</p>
+            <p className="text-sm leading-relaxed text-white/90">
+              {incident.descripcion}
+            </p>
 
             <div className="grid grid-cols-2 gap-3 text-sm text-white/90">
               <DetailPill label="ID" value={incident.id} />
@@ -87,7 +93,8 @@ function IncidentDetailModal({ incident, onClose }: Props) {
                 value={
                   <span className="inline-flex items-center gap-2">
                     <MapIcon className="h-4 w-4 text-accent" />
-                    {incident.posicion.lat.toFixed(4)}, {incident.posicion.lng.toFixed(4)}
+                    {incident.posicion.lat.toFixed(4)},{' '}
+                    {incident.posicion.lng.toFixed(4)}
                   </span>
                 }
               />
@@ -95,7 +102,10 @@ function IncidentDetailModal({ incident, onClose }: Props) {
                 label={`Severidad ${incident.severidad}`}
                 className={severityColor[incident.severidad]}
               />
-              <Tag label={`Estado ${incident.estado}`} className={statusColor[incident.estado]} />
+              <Tag
+                label={`Estado ${incident.estado}`}
+                className={statusColor[incident.estado]}
+              />
             </div>
 
             {incident.detalles?.length ? (
@@ -132,7 +142,7 @@ function IncidentDetailModal({ incident, onClose }: Props) {
                   />
                 </div>
               )}
-              
+
               {showAudio && (
                 <div className="rounded-xl border border-slate/60 bg-charcoal/50 p-4">
                   <p className="text-xs uppercase tracking-[0.18em] text-muted mb-3">
@@ -158,21 +168,23 @@ function IncidentDetailModal({ incident, onClose }: Props) {
         </div>
       </motion.div>
     </motion.div>
-  );
+  )
 }
 
 const DetailPill = ({
   label,
   value,
 }: {
-  label: string;
-  value: React.ReactNode;
+  label: string
+  value: React.ReactNode
 }) => (
   <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate/60 bg-charcoal/60">
-    <span className="text-muted text-[11px] uppercase tracking-[0.18em]">{label}</span>
+    <span className="text-muted text-[11px] uppercase tracking-[0.18em]">
+      {label}
+    </span>
     <span className="font-semibold text-white/90">{value}</span>
   </div>
-);
+)
 
 const Tag = ({ label, className }: { label: string; className: string }) => (
   <span
@@ -180,13 +192,19 @@ const Tag = ({ label, className }: { label: string; className: string }) => (
   >
     {label}
   </span>
-);
+)
 
-const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+const Section = ({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) => (
   <div className="rounded-xl border border-slate/60 bg-charcoal/60 p-3 space-y-2">
     <p className="text-xs uppercase tracking-[0.18em] text-muted">{title}</p>
     {children}
   </div>
-);
+)
 
-export default IncidentDetailModal;
+export default IncidentDetailModal

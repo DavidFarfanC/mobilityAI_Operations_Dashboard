@@ -1,4 +1,4 @@
-import { Incident } from '../types';
+import { Incident } from '../types'
 
 export const linea2Coordinates: [number, number][] = [
   [-99.2043, 19.4589], // Cuatro Caminos
@@ -25,7 +25,7 @@ export const linea2Coordinates: [number, number][] = [
   [-99.1642, 19.3354], // Ermita
   [-99.1701, 19.3245], // General Anaya
   [-99.1875, 19.3234], // Tasqueña
-];
+]
 
 export const linea2Stations = [
   'Cuatro Caminos',
@@ -52,7 +52,7 @@ export const linea2Stations = [
   'Ermita',
   'General Anaya',
   'Tasqueña',
-];
+]
 
 export const line2BaseIncidents: Incident[] = [
   {
@@ -85,4 +85,4 @@ export const line2BaseIncidents: Incident[] = [
     estado: 'resuelto',
     posicion: { lat: 19.4453, lng: -99.1634 },
   },
-];
+]

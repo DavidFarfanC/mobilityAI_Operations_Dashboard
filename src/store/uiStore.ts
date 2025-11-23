@@ -1,15 +1,15 @@
-import { create } from 'zustand';
+import { create } from 'zustand'
 
 type UIState = {
-  selectedIncidentId?: string;
-  setSelectedIncident: (id?: string) => void;
-  selectedLine: 'all' | 'L1' | 'L2';
-  setSelectedLine: (line: 'all' | 'L1' | 'L2') => void;
-  showTrains: boolean;
-  setShowTrains: (show: boolean) => void;
-  showIncidents: boolean;
-  setShowIncidents: (show: boolean) => void;
-};
+  selectedIncidentId?: string
+  setSelectedIncident: (id?: string) => void
+  selectedLine: 'all' | 'L1' | 'L2'
+  setSelectedLine: (line: 'all' | 'L1' | 'L2') => void
+  showTrains: boolean
+  setShowTrains: (show: boolean) => void
+  showIncidents: boolean
+  setShowIncidents: (show: boolean) => void
+}
 
 export const useUiStore = create<UIState>((set) => ({
   selectedIncidentId: undefined,
@@ -20,4 +20,4 @@ export const useUiStore = create<UIState>((set) => ({
   setShowTrains: (show) => set({ showTrains: show }),
   showIncidents: true,
   setShowIncidents: (show) => set({ showIncidents: show }),
-}));
+}))

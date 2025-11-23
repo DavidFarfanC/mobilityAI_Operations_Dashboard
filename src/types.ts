@@ -94,7 +94,12 @@ export interface FallDetectionResponse {
 }
 
 // Tipos para Incident Reports (API)
-export type IncidentType = 'fire' | 'medical' | 'security' | 'maintenance' | 'other'
+export type IncidentType =
+  | 'fire'
+  | 'medical'
+  | 'security'
+  | 'maintenance'
+  | 'other'
 export type IncidentLevel = 'low' | 'medium' | 'high' | 'critical'
 
 export interface IncidentReport {
@@ -172,9 +177,7 @@ export function fallDetectionToIncident(
 }
 
 // Utilidad para transformar IncidentReport a Incident
-export function incidentReportToIncident(
-  report: IncidentReport
-): Incident {
+export function incidentReportToIncident(report: IncidentReport): Incident {
   const incidentDate = new Date(report.incident_datetime)
   const now = new Date()
   const diffMinutes = Math.floor(

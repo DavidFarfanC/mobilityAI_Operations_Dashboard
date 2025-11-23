@@ -339,25 +339,46 @@ function MapView({ incidents, isLoading }: Props) {
   const { data: line1Status, isLoading: loadingLine1 } = useLineStatus()
   const { data: line1Stations, isLoading: loadingStations1 } = useStations()
   const { data: line2Status, isLoading: loadingLine2 } = useLine2Status()
-  const { data: line2Stations, isLoading: loadingStations2 } = useLine2Stations()
+  const { data: line2Stations, isLoading: loadingStations2 } =
+    useLine2Stations()
 
   const mapCenter = { lat: 19.4326, lng: -99.1332 }
 
   const stats = useMemo(() => {
-    const trains1 = selectedLine !== 'L2' && line1Status ? line1Status.active_trains.length : 0
-    const trains2 = selectedLine !== 'L1' && line2Status ? line2Status.active_trains.length : 0
+    const trains1 =
+      selectedLine !== 'L2' && line1Status
+        ? line1Status.active_trains.length
+        : 0
+    const trains2 =
+      selectedLine !== 'L1' && line2Status
+        ? line2Status.active_trains.length
+        : 0
     const activeTrains = trains1 + trains2
 
-    const people1 = selectedLine !== 'L2' && line1Stations ? line1Stations.reduce((sum, s) => sum + s.people_waiting, 0) : 0
-    const people2 = selectedLine !== 'L1' && line2Stations ? line2Stations.reduce((sum, s) => sum + s.people_waiting, 0) : 0
+    const people1 =
+      selectedLine !== 'L2' && line1Stations
+        ? line1Stations.reduce((sum, s) => sum + s.people_waiting, 0)
+        : 0
+    const people2 =
+      selectedLine !== 'L1' && line2Stations
+        ? line2Stations.reduce((sum, s) => sum + s.people_waiting, 0)
+        : 0
     const totalPeople = people1 + people2
 
-    const inc1 = selectedLine !== 'L2' && line1Stations ? line1Stations.filter((s) => s.has_incident).length : 0
-    const inc2 = selectedLine !== 'L1' && line2Stations ? line2Stations.filter((s) => s.has_incident).length : 0
+    const inc1 =
+      selectedLine !== 'L2' && line1Stations
+        ? line1Stations.filter((s) => s.has_incident).length
+        : 0
+    const inc2 =
+      selectedLine !== 'L1' && line2Stations
+        ? line2Stations.filter((s) => s.has_incident).length
+        : 0
     const incidentsCount = inc1 + inc2
 
-    const stations1 = selectedLine !== 'L2' && line1Stations ? line1Stations.length : 0
-    const stations2 = selectedLine !== 'L1' && line2Stations ? line2Stations.length : 0
+    const stations1 =
+      selectedLine !== 'L2' && line1Stations ? line1Stations.length : 0
+    const stations2 =
+      selectedLine !== 'L1' && line2Stations ? line2Stations.length : 0
     const totalStations = stations1 + stations2
 
     return { activeTrains, totalPeople, incidentsCount, totalStations }
@@ -515,7 +536,9 @@ function MapView({ incidents, isLoading }: Props) {
               <p className="mt-2 text-[10px]">
                 ⏱️ Actualización cada 3 segundos
               </p>
-              <p className="text-[10px]">📍 {stats?.totalStations || 0} estaciones</p>
+              <p className="text-[10px]">
+                📍 {stats?.totalStations || 0} estaciones
+              </p>
             </div>
           </>
         )}
