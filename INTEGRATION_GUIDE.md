@@ -28,7 +28,11 @@ src/
 ### 1. Importar los hooks
 
 ```tsx
-import { useLineStatus, useStations, useRecentFallDetections } from '../services/hooks';
+import {
+  useLineStatus,
+  useStations,
+  useRecentFallDetections,
+} from '../services/hooks'
 ```
 
 ### 2. Usar en tus componentes
@@ -36,24 +40,24 @@ import { useLineStatus, useStations, useRecentFallDetections } from '../services
 ```tsx
 export const MiComponente = () => {
   // Obtener estado de la línea (se actualiza cada 3 segundos)
-  const { data: lineStatus, isLoading, error } = useLineStatus();
+  const { data: lineStatus, isLoading, error } = useLineStatus()
 
   // Obtener estaciones (se actualiza cada 5 segundos)
-  const { data: stations } = useStations();
+  const { data: stations } = useStations()
 
   // Obtener incidentes recientes
-  const { data: incidents } = useRecentFallDetections();
+  const { data: incidents } = useRecentFallDetections()
 
-  if (isLoading) return <div>Cargando...</div>;
-  if (error) return <div>Error: {String(error)}</div>;
+  if (isLoading) return <div>Cargando...</div>
+  if (error) return <div>Error: {String(error)}</div>
 
   return (
     <div>
       <h1>{lineStatus?.line_name}</h1>
       <p>Trenes activos: {lineStatus?.active_trains.length}</p>
-      
+
       <h2>Estaciones</h2>
-      {stations?.map(station => (
+      {stations?.map((station) => (
         <div key={station.id}>
           <h3>{station.name}</h3>
           <p>Saturación: {station.saturation}</p>
@@ -61,8 +65,8 @@ export const MiComponente = () => {
         </div>
       ))}
     </div>
-  );
-};
+  )
+}
 ```
 
 ## 📊 Hooks Disponibles
@@ -74,7 +78,7 @@ Obtiene el estado completo de la Línea 1 con todos los trenes activos.
 **Actualización:** cada 3 segundos
 
 ```tsx
-const { data, isLoading, error } = useLineStatus();
+const { data, isLoading, error } = useLineStatus()
 
 // data contiene:
 // - line_name: string
@@ -93,7 +97,7 @@ Obtiene información de todas las 20 estaciones de la Línea 1.
 **Actualización:** cada 5 segundos
 
 ```tsx
-const { data, isLoading } = useStations();
+const { data, isLoading } = useStations()
 
 // data es un array de estaciones con:
 // - id: string
@@ -114,7 +118,7 @@ Obtiene todos los incidentes de caídas con paginación.
 **Actualización:** cada 10 segundos
 
 ```tsx
-const { data, isLoading } = useFallDetections(0, 100);
+const { data, isLoading } = useFallDetections(0, 100)
 
 // data es un array de incidentes con:
 // - id: number
@@ -132,7 +136,7 @@ Obtiene incidentes de las últimas 24 horas.
 **Actualización:** cada 10 segundos
 
 ```tsx
-const { data, isLoading } = useRecentFallDetections();
+const { data, isLoading } = useRecentFallDetections()
 ```
 
 ## 🔧 Funciones de API (sin hooks)
@@ -140,16 +144,20 @@ const { data, isLoading } = useRecentFallDetections();
 ### Metro API
 
 ```tsx
-import { getLineStatus, getStations, resetSimulation } from '../services/metroApi';
+import {
+  getLineStatus,
+  getStations,
+  resetSimulation,
+} from '../services/metroApi'
 
 // Obtener estado de la línea
-const status = await getLineStatus();
+const status = await getLineStatus()
 
 // Obtener estaciones
-const stations = await getStations();
+const stations = await getStations()
 
 // Reiniciar simulación
-const result = await resetSimulation();
+const result = await resetSimulation()
 ```
 
 ### Fall Detection API
@@ -160,24 +168,24 @@ import {
   getFallDetectionById,
   createFallDetection,
   deleteFallDetection,
-} from '../services/fallDetectionApi';
+} from '../services/fallDetectionApi'
 
 // Listar incidentes
-const incidents = await getFallDetections(0, 100);
+const incidents = await getFallDetections(0, 100)
 
 // Obtener incidente específico
-const incident = await getFallDetectionById(1);
+const incident = await getFallDetectionById(1)
 
 // Crear nuevo incidente
 const result = await createFallDetection(
-  imageFile,           // File object
-  'Observatorio',      // Nombre de la estación
-  'persona',          // Objeto detectado
-  new Date()          // Fecha del incidente
-);
+  imageFile, // File object
+  'Observatorio', // Nombre de la estación
+  'persona', // Objeto detectado
+  new Date() // Fecha del incidente
+)
 
 // Eliminar incidente
-await deleteFallDetection(1);
+await deleteFallDetection(1)
 ```
 
 ## 🎨 Ejemplo Completo
@@ -187,14 +195,14 @@ Revisa el componente `MetroIntegrationExample.tsx` para ver un ejemplo completo 
 Para verlo en tu app, importa y usa el componente:
 
 ```tsx
-import { MetroIntegrationExample } from './components/MetroIntegrationExample';
+import { MetroIntegrationExample } from './components/MetroIntegrationExample'
 
 function App() {
   return (
     <div>
       <MetroIntegrationExample />
     </div>
-  );
+  )
 }
 ```
 
@@ -215,7 +223,7 @@ Si necesitas autenticación JWT, los tokens se manejan automáticamente:
 
 ```tsx
 // Guardar token después del login
-localStorage.setItem('auth_token', token);
+localStorage.setItem('auth_token', token)
 
 // El interceptor de axios lo agregará automáticamente a todas las peticiones
 ```
@@ -223,11 +231,11 @@ localStorage.setItem('auth_token', token);
 ## 🚨 Manejo de Errores
 
 ```tsx
-const { data, isLoading, error } = useLineStatus();
+const { data, isLoading, error } = useLineStatus()
 
 if (error) {
-  console.error('Error:', error);
-  return <div>Error al cargar datos del metro</div>;
+  console.error('Error:', error)
+  return <div>Error al cargar datos del metro</div>
 }
 ```
 
@@ -236,12 +244,12 @@ if (error) {
 Si necesitas forzar una actualización:
 
 ```tsx
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query'
 
-const queryClient = useQueryClient();
+const queryClient = useQueryClient()
 
 // Refetch manual
-queryClient.invalidateQueries({ queryKey: ['metro', 'line1', 'status'] });
+queryClient.invalidateQueries({ queryKey: ['metro', 'line1', 'status'] })
 ```
 
 ## 🛠️ Configuración
@@ -249,7 +257,7 @@ queryClient.invalidateQueries({ queryKey: ['metro', 'line1', 'status'] });
 Para cambiar la URL del backend, edita `src/config/api.ts`:
 
 ```tsx
-export const API_BASE_URL = 'http://tu-servidor.com';
+export const API_BASE_URL = 'http://tu-servidor.com'
 ```
 
 ## 📱 Integración en Componentes Existentes
@@ -257,14 +265,14 @@ export const API_BASE_URL = 'http://tu-servidor.com';
 ### En MapView.tsx
 
 ```tsx
-import { useStations } from '../services/hooks';
+import { useStations } from '../services/hooks'
 
 export const MapView = () => {
-  const { data: stations } = useStations();
+  const { data: stations } = useStations()
 
   return (
     <Map>
-      {stations?.map(station => (
+      {stations?.map((station) => (
         <Marker
           key={station.id}
           latitude={station.latitude}
@@ -273,18 +281,18 @@ export const MapView = () => {
         />
       ))}
     </Map>
-  );
-};
+  )
+}
 ```
 
 ### En KPIStats.tsx
 
 ```tsx
-import { useLineStatus, useRecentFallDetections } from '../services/hooks';
+import { useLineStatus, useRecentFallDetections } from '../services/hooks'
 
 export const KPIStats = () => {
-  const { data: lineStatus } = useLineStatus();
-  const { data: incidents } = useRecentFallDetections();
+  const { data: lineStatus } = useLineStatus()
+  const { data: incidents } = useRecentFallDetections()
 
   return (
     <div>
@@ -292,23 +300,23 @@ export const KPIStats = () => {
       <Stat label="Incidentes hoy" value={incidents?.length} />
       <Stat label="Saturación" value={lineStatus?.saturation} />
     </div>
-  );
-};
+  )
+}
 ```
 
 ### En IncidentSidebar.tsx
 
 ```tsx
-import { useRecentFallDetections } from '../services/hooks';
+import { useRecentFallDetections } from '../services/hooks'
 
 export const IncidentSidebar = () => {
-  const { data: incidents, isLoading } = useRecentFallDetections();
+  const { data: incidents, isLoading } = useRecentFallDetections()
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <Loading />
 
   return (
     <div>
-      {incidents?.map(incident => (
+      {incidents?.map((incident) => (
         <IncidentCard
           key={incident.id}
           station={incident.station}
@@ -318,8 +326,8 @@ export const IncidentSidebar = () => {
         />
       ))}
     </div>
-  );
-};
+  )
+}
 ```
 
 ## ✅ Checklist de Integración
@@ -366,7 +374,7 @@ curl http://ec2-54-84-92-63.compute-1.amazonaws.com/metro/line1/status
 React Query cachea los datos. Para debugging, reduce los tiempos:
 
 ```tsx
-refetchInterval: 1000  // actualizar cada segundo
+refetchInterval: 1000 // actualizar cada segundo
 ```
 
 ## 📚 Recursos

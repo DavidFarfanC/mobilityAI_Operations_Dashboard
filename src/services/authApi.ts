@@ -1,4 +1,4 @@
-import { apiClient } from '../config/api';
+import { apiClient } from '../config/api'
 
 /**
  * Servicio de autenticación con el backend
@@ -6,52 +6,54 @@ import { apiClient } from '../config/api';
  */
 
 export interface RegisterRequest {
-  email: string;
-  username: string;
-  password: string;
+  email: string
+  username: string
+  password: string
 }
 
 export interface LoginRequest {
-  email: string;
-  password: string;
+  email: string
+  password: string
 }
 
 export interface AuthResponse {
-  access_token: string;
-  token_type: string;
+  access_token: string
+  token_type: string
   user?: {
-    id: number;
-    email: string;
-    username: string;
-  };
+    id: number
+    email: string
+    username: string
+  }
 }
 
 export interface User {
-  id: number;
-  email: string;
-  username: string;
-  created_at: string;
+  id: number
+  email: string
+  username: string
+  created_at: string
 }
 
 /**
  * Registrar un nuevo usuario
  * Endpoint: POST /auth/register
  */
-export const register = async (data: RegisterRequest): Promise<AuthResponse> => {
+export const register = async (
+  data: RegisterRequest
+): Promise<AuthResponse> => {
   try {
-    const response = await apiClient.post<AuthResponse>('/auth/register', data);
-    
+    const response = await apiClient.post<AuthResponse>('/auth/register', data)
+
     // Guardar token en localStorage
     if (response.data.access_token) {
-      localStorage.setItem('auth_token', response.data.access_token);
+      localStorage.setItem('auth_token', response.data.access_token)
     }
-    
-    return response.data;
+
+    return response.data
   } catch (error) {
-    console.error('Error during registration:', error);
-    throw error;
+    console.error('Error during registration:', error)
+    throw error
   }
-};
+}
 
 /**
  * Iniciar sesión
@@ -59,26 +61,26 @@ export const register = async (data: RegisterRequest): Promise<AuthResponse> => 
  */
 export const login = async (data: LoginRequest): Promise<AuthResponse> => {
   try {
-    const response = await apiClient.post<AuthResponse>('/auth/login', data);
-    
+    const response = await apiClient.post<AuthResponse>('/auth/login', data)
+
     // Guardar token en localStorage
     if (response.data.access_token) {
-      localStorage.setItem('auth_token', response.data.access_token);
+      localStorage.setItem('auth_token', response.data.access_token)
     }
-    
-    return response.data;
+
+    return response.data
   } catch (error) {
-    console.error('Error during login:', error);
-    throw error;
+    console.error('Error during login:', error)
+    throw error
   }
-};
+}
 
 /**
  * Cerrar sesión
  */
 export const logout = (): void => {
-  localStorage.removeItem('auth_token');
-};
+  localStorage.removeItem('auth_token')
+}
 
 /**
  * Obtener usuario actual
@@ -86,24 +88,24 @@ export const logout = (): void => {
  */
 export const getCurrentUser = async (): Promise<User> => {
   try {
-    const response = await apiClient.get<User>('/auth/me');
-    return response.data;
+    const response = await apiClient.get<User>('/auth/me')
+    return response.data
   } catch (error) {
-    console.error('Error fetching current user:', error);
-    throw error;
+    console.error('Error fetching current user:', error)
+    throw error
   }
-};
+}
 
 /**
  * Verificar si el usuario está autenticado
  */
 export const isAuthenticated = (): boolean => {
-  return !!localStorage.getItem('auth_token');
-};
+  return !!localStorage.getItem('auth_token')
+}
 
 /**
  * Obtener el token actual
  */
 export const getToken = (): string | null => {
-  return localStorage.getItem('auth_token');
-};
+  return localStorage.getItem('auth_token')
+}

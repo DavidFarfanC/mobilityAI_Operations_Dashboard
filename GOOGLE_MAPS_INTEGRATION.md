@@ -5,6 +5,7 @@ El mapa del dashboard ahora usa **Google Maps** y se conecta en tiempo real con 
 ## 🗺️ Características del Mapa
 
 ### Datos en Tiempo Real (cada 3 segundos)
+
 - ✅ 20 estaciones de la Línea 1 con coordenadas reales
 - ✅ 7 trenes activos moviéndose en tiempo real
 - ✅ Nivel de saturación por estación
@@ -14,13 +15,16 @@ El mapa del dashboard ahora usa **Google Maps** y se conecta en tiempo real con 
 - ✅ Reportes ciudadanos de incidentes
 
 ### Visualización Interactiva
+
 - 🎯 **Marcadores de estaciones**: Coloreados según nivel de saturación
+
   - Verde: Saturación baja
   - Ámbar: Saturación media
   - Rojo: Saturación alta
   - Rojo oscuro: Saturación crítica
 
 - 🚇 **Marcadores de trenes**: Se mueven automáticamente entre estaciones
+
   - Muestra ID del tren
   - Dirección (Observatorio ↔ Pantitlán)
   - Ocupación por vagón
@@ -58,6 +62,7 @@ VITE_API_BASE_URL=http://ec2-54-84-92-63.compute-1.amazonaws.com
 En Google Cloud Console, restringe tu API Key:
 
 1. **Restricciones de aplicación:**
+
    - Selecciona "Restricciones de HTTP referer"
    - Agrega: `http://localhost:*/*` (desarrollo)
    - Agrega: `https://tudominio.com/*` (producción)
@@ -68,7 +73,9 @@ En Google Cloud Console, restringe tu API Key:
 ## 🎮 Interactividad del Mapa
 
 ### Click en Estaciones
+
 Al hacer click en una estación, se muestra:
+
 - Nombre de la estación
 - Nivel de saturación
 - Número de personas esperando
@@ -77,7 +84,9 @@ Al hacer click en una estación, se muestra:
 - Mensaje de incidente (si existe)
 
 ### Click en Trenes
+
 Al hacer click en un tren, se muestra:
+
 - ID del tren (ej: T101)
 - Dirección (Observatorio/Pantitlán)
 - Estación actual y siguiente
@@ -87,13 +96,16 @@ Al hacer click en un tren, se muestra:
 - Ocupación por vagón (con código de colores)
 
 ### Click en Incidentes
+
 Al hacer click en un reporte ciudadano:
+
 - Se abre el modal con detalles completos
 - Se muestra en el sidebar de incidentes
 
 ## 📊 Panel de Información
 
 En la esquina superior izquierda del mapa:
+
 - Nombre de la línea y ruta
 - Alertas de incidentes (si existen)
 - Estadísticas rápidas:
@@ -106,6 +118,7 @@ En la esquina superior izquierda del mapa:
 ## 🔄 Actualización Automática
 
 El mapa se actualiza automáticamente:
+
 - **Cada 3 segundos**: Estado de línea y posición de trenes
 - **Cada 5 segundos**: Estado de estaciones
 - No requiere refrescar la página
@@ -113,6 +126,7 @@ El mapa se actualiza automáticamente:
 ## 🎨 Estilos Personalizados
 
 El mapa usa un tema oscuro personalizado que combina con el diseño del dashboard:
+
 - Geometría en tonos oscuros (#242f3e)
 - Agua en color oscuro (#17263c)
 - Carreteras en gris (#2b3544)
@@ -123,17 +137,17 @@ El mapa usa un tema oscuro personalizado que combina con el diseño del dashboar
 El mapa ya está integrado en `App.tsx`. Si necesitas usarlo en otro lugar:
 
 ```tsx
-import MapView from './components/MapView';
-import { useIncidents } from './services/hooks';
+import MapView from './components/MapView'
+import { useIncidents } from './services/hooks'
 
 function MiComponente() {
-  const { data: incidents = [], isLoading } = useIncidents();
-  
+  const { data: incidents = [], isLoading } = useIncidents()
+
   return (
     <div className="h-screen">
       <MapView incidents={incidents} isLoading={isLoading} />
     </div>
-  );
+  )
 }
 ```
 
@@ -142,11 +156,13 @@ function MiComponente() {
 ### Error: "Google Maps API Key no configurada"
 
 **Solución:** Verifica que el archivo `.env` tenga la variable:
+
 ```bash
 VITE_GOOGLE_MAPS_API_KEY=tu_api_key_aqui
 ```
 
 Reinicia el servidor de desarrollo:
+
 ```bash
 yarn dev
 ```
@@ -154,12 +170,14 @@ yarn dev
 ### Error: "This page can't load Google Maps correctly"
 
 **Causas posibles:**
+
 1. API Key inválida o vencida
 2. APIs no habilitadas en Google Cloud Console
 3. Restricciones de dominio muy estrictas
 4. Límites de uso excedidos
 
 **Solución:**
+
 1. Verifica tu API Key en Google Cloud Console
 2. Asegúrate de tener habilitada "Maps JavaScript API"
 3. Revisa las restricciones de la API Key
@@ -170,6 +188,7 @@ yarn dev
 **Causa:** El backend no está respondiendo o está caído
 
 **Solución:**
+
 1. Verifica la conexión al backend:
    ```bash
    curl http://ec2-54-84-92-63.compute-1.amazonaws.com/metro/line1/status
@@ -182,6 +201,7 @@ yarn dev
 **Causa:** Error al obtener datos del backend
 
 **Solución:**
+
 1. Verifica la URL del backend en `.env`
 2. Revisa errores de CORS en la consola
 3. Verifica que el endpoint `/metro/line1/stations` responda
@@ -189,11 +209,13 @@ yarn dev
 ## 📈 Optimizaciones
 
 ### Rendimiento
+
 - Los marcadores se crean una sola vez
 - Las posiciones se interpolan en el cliente
 - React Query cachea las respuestas del backend
 
 ### Uso de API
+
 - Un solo mapa por página
 - Estilos cargados una vez
 - Sin recargas innecesarias
@@ -208,6 +230,7 @@ yarn dev
 ## 📱 Responsive
 
 El mapa se adapta automáticamente:
+
 - Desktop: Altura completa de la sección
 - Tablet: 480px de altura mínima
 - Mobile: Se ajusta al contenedor
@@ -215,6 +238,7 @@ El mapa se adapta automáticamente:
 ## 🎯 Próximos Pasos
 
 Puedes mejorar el mapa agregando:
+
 - [ ] Filtros de saturación/incidentes
 - [ ] Búsqueda de estaciones
 - [ ] Rutas sugeridas
