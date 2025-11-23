@@ -7,7 +7,7 @@ Panel SPA en React + Vite para ver incidentes de la Línea 1 con mapa, KPIs y si
 npm install   # o pnpm / yarn
 npm run dev   # http://localhost:5173
 ```
-
+.
 ## Cosas clave
 - React + TS + Tailwind (tema oscuro con verde).
 - MapLibre para el mapa; Framer Motion para animaciones.
