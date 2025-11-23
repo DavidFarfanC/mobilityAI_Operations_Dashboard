@@ -45,3 +45,5 @@ export const linea1Stations = [
   'Zaragoza',
   'Pantitlán',
 ]
+
+export const baseIncidents: Incident[] = []
