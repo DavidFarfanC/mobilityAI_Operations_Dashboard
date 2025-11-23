@@ -2,8 +2,7 @@ import axios from 'axios'
 
 // URL base del backend en AWS (usa variable de entorno si está disponible)
 // En producción (Vercel) usa el proxy /api, en desarrollo también
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || '/api'
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 // API Key de Google Maps
 export const GOOGLE_MAPS_API_KEY =
