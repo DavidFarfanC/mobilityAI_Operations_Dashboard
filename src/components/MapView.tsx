@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import maplibregl, { Map as MapLibreMap, Marker } from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { APIProvider, Map, useMap } from '@vis.gl/react-google-maps';
 import { motion } from 'framer-motion';
-import { linea1Coordinates, linea1Stations } from '../constants/line1';
-import { Incident } from '../types';
+import { GOOGLE_MAPS_API_KEY } from '../config/api';
+import { Incident, Train as BackendTrain, Station as BackendStation } from '../types';
 import { useUiStore } from '../store/uiStore';
+import { useLineStatus, useStations } from '../services/hooks';
 import { TrainIcon } from './ui/icons';
 
 type Props = {
@@ -12,184 +12,317 @@ type Props = {
   isLoading?: boolean;
 };
 
-type Train = { id: string; progress: number; speed: number };
+const getSaturationColor = (saturation: string): string => {
+  switch (saturation) {
+    case 'low': return '#10b981';
+    case 'medium': return '#f59e0b';
+    case 'high': return '#ef4444';
+    case 'critical': return '#991b1b';
+    default: return '#7ae582';
+  }
+};
 
-const MAP_STYLE = 'https://demotiles.maplibre.org/style.json';
+const getIncidentColor = (severity: string): string => {
+  switch (severity) {
+    case 'baja': return '#10b981';
+    case 'media': return '#f59e0b';
+    case 'alta': return '#ef4444';
+    case 'critica': return '#991b1b';
+    default: return '#7ae582';
+  }
+};
 
-function MapView({ incidents, isLoading }: Props) {
-  const mapRef = useRef<MapLibreMap | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const incidentMarkers = useRef<Map<string, Marker>>(new Map());
-  const trainMarkers = useRef<Map<string, Marker>>(new Map());
-  const { setSelectedIncident } = useUiStore();
-  const [trains, setTrains] = useState<Train[]>(() =>
-    Array.from({ length: 3 }).map((_, idx) => ({
-      id: `T-${idx + 1}`,
-      progress: Math.random(),
-      speed: 0.005 + Math.random() * 0.003,
-    }))
-  );
-
-  const lineGeoJson = useMemo(
-    () => ({
-      type: 'Feature',
-      geometry: {
-        type: 'LineString',
-        coordinates: linea1Coordinates,
-      },
-      properties: { name: 'Línea 1' },
-    }),
-    []
-  );
-
-  const cumulativeLine = useMemo(() => cumulativeDistances(linea1Coordinates), []);
-
-  useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
-    mapRef.current = new maplibregl.Map({
-      container: containerRef.current,
-      style: MAP_STYLE,
-      center: [-99.13, 19.42],
-      zoom: 11.3,
-      attributionControl: false,
-    });
-
-    mapRef.current.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
-
-    mapRef.current.on('load', () => {
-      if (!mapRef.current) return;
-      // Fuente/linea principal
-      mapRef.current.addSource('linea1', {
-        type: 'geojson',
-        data: lineGeoJson,
-      });
-      mapRef.current.addLayer({
-        id: 'linea1-path',
-        type: 'line',
-        source: 'linea1',
-        paint: {
-          'line-color': '#7ae582',
-          'line-width': 5,
-          'line-opacity': 0.9,
-        },
-      });
-
-      mapRef.current.addLayer({
-        id: 'linea1-stops',
-        type: 'circle',
-        source: 'linea1',
-        paint: {
-          'circle-radius': 4,
-          'circle-color': '#1f2937',
-          'circle-stroke-color': '#7ae582',
-          'circle-stroke-width': 1.5,
-        },
-      });
-    });
-
-    return () => {
-      mapRef.current?.remove();
-      mapRef.current = null;
-    };
-  }, [lineGeoJson]);
+// Componente que usa useMap para acceder a la instancia del mapa
+function MapContent({
+  stations,
+  lineStatus,
+  incidents,
+  setSelectedIncident,
+}: {
+  stations?: BackendStation[];
+  lineStatus: any;
+  incidents: Incident[];
+  setSelectedIncident: (id: string) => void;
+}) {
+  const map = useMap();
+  const markersRef = useRef<google.maps.Marker[]>([]);
+  const lineRef = useRef<google.maps.Polyline | null>(null);
+  const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
 
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
+    if (!map || !window.google) return;
 
-    const updateMarkers = () => {
-      incidentMarkers.current.forEach((marker) => marker.remove());
-      incidentMarkers.current.clear();
-
-      incidents.forEach((incident) => {
-        // Marker sencillo por incidente
-        const el = document.createElement('div');
-        el.className =
-          'w-4 h-4 rounded-full border-2 border-white shadow-lg cursor-pointer bg-accent';
-        el.title = `${incident.tipo} (${incident.severidad})`;
-        el.addEventListener('click', () => setSelectedIncident(incident.id));
-        const marker = new maplibregl.Marker(el)
-          .setLngLat([incident.posicion.lng, incident.posicion.lat])
-          .addTo(map);
-        incidentMarkers.current.set(incident.id, marker);
-      });
-    };
-
-    if (map.isStyleLoaded()) {
-      updateMarkers();
-    } else {
-      map.once('load', updateMarkers);
+    markersRef.current.forEach(m => m.setMap(null));
+    markersRef.current = [];
+    
+    if (lineRef.current) {
+      lineRef.current.setMap(null);
     }
 
-    return () => {
-      map.off('load', updateMarkers);
-      incidentMarkers.current.forEach((marker) => marker.remove());
-      incidentMarkers.current.clear();
-    };
-  }, [incidents, setSelectedIncident]);
+    if (!infoWindowRef.current) {
+      infoWindowRef.current = new google.maps.InfoWindow();
+    }
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      setTrains((prev) =>
-        prev.map((train) => {
-          // Progreso circular en la linea
-          const next = train.progress + train.speed;
-          return { ...train, progress: next > 1 ? next - 1 : next };
-        })
-      );
-    }, 1200);
-    return () => clearInterval(id);
-  }, []);
+    if (stations && stations.length > 0) {
+      const linePath = stations.map(s => ({ lat: s.latitude, lng: s.longitude }));
+      lineRef.current = new google.maps.Polyline({
+        path: linePath,
+        geodesic: true,
+        strokeColor: '#ec4899',
+        strokeOpacity: 0.9,
+        strokeWeight: 5,
+      });
+      lineRef.current.setMap(map);
+    }
 
-  useEffect(() => {
-    if (!mapRef.current) return;
+    stations?.forEach((station) => {
+      const marker = new google.maps.Marker({
+        position: { lat: station.latitude, lng: station.longitude },
+        map,
+        title: station.name,
+        icon: {
+          url: '/station-icon.png', // Reemplaza con la ruta de tu imagen
+          scaledSize: new google.maps.Size(station.has_incident ? 40 : 32, station.has_incident ? 40 : 32),
+          anchor: new google.maps.Point(station.has_incident ? 20 : 16, station.has_incident ? 20 : 16),
+        },
+      });
 
-    trains.forEach((train) => {
-      const point = interpolateOnLine(linea1Coordinates, cumulativeLine, train.progress);
-      const markerEl = document.createElement('div');
-      markerEl.className =
-        'w-8 h-8 rounded-full bg-accent/20 border border-accent/60 grid place-items-center shadow-glass';
-      const svg = document.createElement('div');
-      svg.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#7ae582" stroke-width="1.8"><rect x="6" y="3" width="12" height="14" rx="2"/><path d="M6 11h12"/><circle cx="9" cy="16.5" r="1"/><circle cx="15" cy="16.5" r="1"/><path d="m8 21 2-2h4l2 2"/></svg>`;
-      svg.className = 'w-4 h-4';
-      markerEl.appendChild(svg);
+      marker.addListener('click', () => {
+        const content = `
+          <div style="padding: 8px; max-width: 250px;">
+            <h3 style="font-weight: bold; font-size: 16px; margin-bottom: 8px;">${station.name}</h3>
+            <div style="font-size: 14px;">
+              <p><strong>Saturación:</strong> <span style="padding: 2px 8px; border-radius: 4px; background-color: ${getSaturationColor(station.saturation)}; color: white;">${station.saturation}</span></p>
+              <p><strong>Personas esperando:</strong> ${station.people_waiting}</p>
+              <p><strong>Próximo tren:</strong> ${station.next_train_arrival} min</p>
+              ${station.has_incident ? `<p style="color: #ef4444; font-weight: 600;">⚠️ ${station.incident_message}</p>` : ''}
+            </div>
+          </div>
+        `;
+        infoWindowRef.current?.setContent(content);
+        infoWindowRef.current?.open(map, marker);
+      });
 
-      const existing = trainMarkers.current.get(train.id);
-      if (existing) {
-        existing.setLngLat(point).addTo(mapRef.current);
-      } else {
-        const newMarker = new maplibregl.Marker(markerEl).setLngLat(point).addTo(mapRef.current);
-        trainMarkers.current.set(train.id, newMarker);
-      }
+      markersRef.current.push(marker);
     });
-  }, [cumulativeLine, trains]);
+
+    lineStatus?.active_trains?.forEach((train: BackendTrain) => {
+      const currentStation = stations?.find(s => s.name === train.current_station);
+      const nextStation = stations?.find(s => s.name === train.next_station);
+      
+      if (!currentStation || !nextStation) return;
+
+      const lat = currentStation.latitude + 
+        (nextStation.latitude - currentStation.latitude) * train.progress_to_next;
+      const lng = currentStation.longitude + 
+        (nextStation.longitude - currentStation.longitude) * train.progress_to_next;
+
+      const marker = new google.maps.Marker({
+        position: { lat, lng },
+        map,
+        title: train.train_id,
+        icon: {
+          url: '/train-icon.png', // Reemplaza con la ruta de tu imagen
+          scaledSize: new google.maps.Size(32, 32),
+          anchor: new google.maps.Point(16, 16),
+        },
+      });
+
+      marker.addListener('click', () => {
+        const totalPassengers = train.passengers_per_wagon.reduce((a, b) => a + b, 0);
+        const wagonInfo = train.passengers_per_wagon.map((p, i) => 
+          `<div style="display:inline-block; width:40px; text-align:center; padding:4px; margin:2px; border-radius:4px; background-color:${p > 50 ? '#ef4444' : p > 35 ? '#f59e0b' : '#10b981'}; color:white;">${p}</div>`
+        ).join('');
+
+        const content = `
+          <div style="padding: 8px; max-width: 280px;">
+            <h3 style="font-weight: bold; font-size: 16px; margin-bottom: 8px;">🚇 ${train.train_id}</h3>
+            <div style="font-size: 14px;">
+              <p><strong>Dirección:</strong> ${train.direction}</p>
+              <p><strong>De:</strong> ${train.current_station}</p>
+              <p><strong>A:</strong> ${train.next_station}</p>
+              <p><strong>Progreso:</strong> ${Math.round(train.progress_to_next * 100)}%</p>
+              <p><strong>Vagones:</strong> ${train.wagons}</p>
+              <p><strong>Pasajeros totales:</strong> ${totalPassengers}</p>
+              <div style="margin-top: 8px;">
+                <p style="font-weight: 600; margin-bottom: 4px;">Ocupación:</p>
+                <div>${wagonInfo}</div>
+              </div>
+            </div>
+          </div>
+        `;
+        infoWindowRef.current?.setContent(content);
+        infoWindowRef.current?.open(map, marker);
+      });
+
+      markersRef.current.push(marker);
+    });
+
+    incidents.forEach((incident) => {
+      const marker = new google.maps.Marker({
+        position: { lat: incident.posicion.lat, lng: incident.posicion.lng },
+        map,
+        title: incident.tipo,
+        icon: {
+          url: '/incident-icon.png', // Puedes usar una imagen personalizada
+          scaledSize: new google.maps.Size(24, 24),
+          anchor: new google.maps.Point(12, 12),
+        },
+      });
+
+      marker.addListener('click', () => {
+        const content = `
+          <div style="padding: 8px; max-width: 280px;">
+            <h3 style="font-weight: bold; font-size: 16px; margin-bottom: 8px;">🚨 ${incident.tipo}</h3>
+            <div style="font-size: 14px;">
+              <p><strong>Hora:</strong> ${incident.hora}</p>
+              <p><strong>Ubicación:</strong> ${incident.linea}</p>
+              <p><strong>Severidad:</strong> <span style="padding: 2px 8px; border-radius: 4px; background-color: ${getIncidentColor(incident.severidad)}; color: white;">${incident.severidad}</span></p>
+              <p><strong>Estado:</strong> ${incident.estado}</p>
+              <p style="margin-top: 8px;">${incident.descripcion}</p>
+              ${incident.fotoUrl ? `<img src="${incident.fotoUrl}" alt="Incident" style="width: 100%; margin-top: 8px; border-radius: 8px;" />` : ''}
+              <button style="margin-top: 8px; padding: 4px 12px; background-color: #7ae582; color: #000; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Ver detalles</button>
+            </div>
+          </div>
+        `;
+        infoWindowRef.current?.setContent(content);
+        infoWindowRef.current?.open(map, marker);
+        
+        // Al hacer clic en el InfoWindow, abrir el modal
+        google.maps.event.addListenerOnce(infoWindowRef.current!, 'domready', () => {
+          const contentElement = document.querySelector('.gm-style-iw-c');
+          const button = contentElement?.querySelector('button');
+          button?.addEventListener('click', () => {
+            setSelectedIncident(incident.id);
+            infoWindowRef.current?.close();
+          });
+        });
+      });
+
+      markersRef.current.push(marker);
+    });
+
+    return () => {
+      markersRef.current.forEach(m => m.setMap(null));
+      if (lineRef.current) lineRef.current.setMap(null);
+    };
+  }, [map, stations, lineStatus, incidents, setSelectedIncident]);
+
+  return null;
+}
+
+function MapView({ incidents, isLoading }: Props) {
+  const { setSelectedIncident } = useUiStore();
+  
+  const { data: lineStatus, isLoading: loadingLine } = useLineStatus();
+  const { data: stations, isLoading: loadingStations } = useStations();
+
+  const mapCenter = { lat: 19.4326, lng: -99.1332 };
+
+  const stats = useMemo(() => {
+    if (!lineStatus || !stations) return null;
+    
+    const activeTrains = lineStatus.active_trains.length;
+    const totalPeople = stations.reduce((sum, s) => sum + s.people_waiting, 0);
+    const incidentsCount = stations.filter(s => s.has_incident).length;
+    
+    return { activeTrains, totalPeople, incidentsCount };
+  }, [lineStatus, stations]);
+
+  if (!GOOGLE_MAPS_API_KEY) {
+    return (
+      <div className="h-full flex items-center justify-center bg-charcoal/70">
+        <div className="text-center p-6">
+          <p className="text-red-400 font-semibold mb-2">⚠️ Google Maps API Key no configurada</p>
+          <p className="text-muted text-sm">
+            Agrega tu API key en el archivo <code className="bg-slate/50 px-2 py-1 rounded">.env</code>
+          </p>
+          <p className="text-muted text-xs mt-2">
+            VITE_GOOGLE_MAPS_API_KEY=tu_api_key_aqui
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-[480px] xl:h-full">
-      <div ref={containerRef} className="h-full w-full" />
+      <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
+        <Map
+          defaultCenter={mapCenter}
+          defaultZoom={12}
+          gestureHandling="greedy"
+          disableDefaultUI={false}
+          mapId="mobilityai-map"
+          style={{ width: '100%', height: '100%' }}
+        />
+        <MapContent
+          stations={stations}
+          lineStatus={lineStatus}
+          incidents={incidents}
+          setSelectedIncident={setSelectedIncident}
+        />
+      </APIProvider>
+
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="absolute top-4 left-4 bg-slate/80 backdrop-blur-sm border border-slate/60 rounded-2xl p-3 text-sm text-muted shadow-glass"
+        className="absolute top-4 left-4 bg-slate/90 backdrop-blur-sm border border-slate/60 rounded-2xl p-4 text-sm text-muted shadow-glass max-w-sm"
       >
-        <p className="text-white font-semibold font-display text-lg">Línea 1 · Metro CDMX</p>
-        <p>Simulación de trenes y reportes ciudadanos</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {linea1Stations.slice(0, 5).map((name) => (
-            <span key={name} className="px-2 py-1 text-xs rounded-lg bg-accent/10 text-accent">
-              {name}
-            </span>
-          ))}
-          <span className="px-2 py-1 text-xs rounded-lg bg-slate/80 border border-slate/60">
-            +{linea1Stations.length - 5} estaciones
-          </span>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-white font-semibold font-display text-lg">
+            {lineStatus?.line_name || 'Línea 1'} · Metro CDMX
+          </p>
+          {loadingLine && (
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-accent border-t-transparent" />
+          )}
         </div>
+        
+        {lineStatus && (
+          <>
+            <p className="text-accent mb-2">{lineStatus.route}</p>
+            
+            {lineStatus.incident_type !== 'none' && (
+              <div className="mb-3 p-2 bg-red-500/20 border border-red-500/50 rounded-lg">
+                <p className="text-red-400 font-semibold text-xs">
+                  ⚠️ {lineStatus.incident_message}
+                </p>
+              </div>
+            )}
+
+            {stats && (
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="bg-charcoal/50 rounded-lg p-2 text-center">
+                  <p className="text-xs text-muted">Trenes</p>
+                  <p className="text-lg font-bold text-accent">{stats.activeTrains}</p>
+                </div>
+                <div className="bg-charcoal/50 rounded-lg p-2 text-center">
+                  <p className="text-xs text-muted">Personas</p>
+                  <p className="text-lg font-bold text-white">{stats.totalPeople}</p>
+                </div>
+                <div className="bg-charcoal/50 rounded-lg p-2 text-center">
+                  <p className="text-xs text-muted">Incidentes</p>
+                  <p className="text-lg font-bold text-red-400">{stats.incidentsCount}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="text-xs text-muted">
+              <p><span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span> Baja saturación</p>
+              <p><span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1"></span> Media saturación</p>
+              <p><span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1"></span> Alta saturación</p>
+              <p className="mt-2 text-[10px]">⏱️ Actualización cada 3 segundos</p>
+              <p className="text-[10px]">📍 {stations?.length || 20} estaciones</p>
+            </div>
+          </>
+        )}
       </motion.div>
-      {isLoading && (
-        <div className="absolute inset-0 grid place-items-center bg-graphite/70 backdrop-blur-sm">
-          <div className="flex items-center gap-3 text-muted">
+
+      {(isLoading || loadingStations) && (
+        <div className="absolute inset-0 grid place-items-center bg-graphite/70 backdrop-blur-sm pointer-events-none">
+          <div className="flex items-center gap-3 text-muted bg-charcoal/90 px-4 py-3 rounded-lg">
             <TrainIcon className="h-5 w-5 animate-pulse" />
-            Cargando incidentes...
+            Cargando datos del metro...
           </div>
         </div>
       )}
@@ -198,50 +331,3 @@ function MapView({ incidents, isLoading }: Props) {
 }
 
 export default MapView;
-
-const toRadians = (deg: number) => (deg * Math.PI) / 180;
-
-// Lightweight distance approximation to keep trains moving smoothly.
-const haversineDistance = (a: [number, number], b: [number, number]) => {
-  const R = 6371;
-  const dLat = toRadians(b[1] - a[1]);
-  const dLon = toRadians(b[0] - a[0]);
-  const lat1 = toRadians(a[1]);
-  const lat2 = toRadians(b[1]);
-
-  const sinLat = Math.sin(dLat / 2);
-  const sinLon = Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(
-    Math.sqrt(sinLat * sinLat + Math.cos(lat1) * Math.cos(lat2) * sinLon * sinLon),
-    Math.sqrt(1 - sinLat * sinLat - Math.cos(lat1) * Math.cos(lat2) * sinLon * sinLon)
-  );
-
-  return R * c;
-};
-
-const cumulativeDistances = (coords: [number, number][]) => {
-  const distances = [0];
-  for (let i = 1; i < coords.length; i++) {
-    distances[i] = distances[i - 1] + haversineDistance(coords[i - 1], coords[i]);
-  }
-  return distances;
-};
-
-const interpolateOnLine = (
-  coords: [number, number][],
-  cumulative: number[],
-  progress: number
-): [number, number] => {
-  const total = cumulative[cumulative.length - 1];
-  let target = progress * total;
-  for (let i = 1; i < cumulative.length; i++) {
-    if (target <= cumulative[i]) {
-      const segment = cumulative[i] - cumulative[i - 1];
-      const ratio = segment === 0 ? 0 : (target - cumulative[i - 1]) / segment;
-      const lng = coords[i - 1][0] + (coords[i][0] - coords[i - 1][0]) * ratio;
-      const lat = coords[i - 1][1] + (coords[i][1] - coords[i - 1][1]) * ratio;
-      return [lng, lat];
-    }
-  }
-  return coords[coords.length - 1];
-};
