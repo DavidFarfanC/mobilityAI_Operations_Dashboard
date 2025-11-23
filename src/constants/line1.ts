@@ -56,6 +56,17 @@ export const baseIncidents: Incident[] = [
     estado: 'en camino',
     linea: 'Línea 1',
     posicion: { lat: 19.404, lng: -99.1873 },
+    fotoUrl: 'https://res.cloudinary.com/dkucopkow/image/upload/v1763871821/62c5b8b0b1c22557109747_awqk2f.jpg',
+    detalles: [
+      'Tren detenido 3 minutos por revisión preventiva.',
+      'Reporte inicial desde puesto de control central.',
+      'Se detectó posible anomalía en sistema de frenos.',
+    ],
+    accionesSugeridas: [
+      'Confirmar tiempo estimado de reanudación.',
+      'Comunicar mensaje a usuarios en andén y tren.',
+      'Validar con mantenimiento si requiere retiro de tren.',
+    ],
   },
   {
     id: 'INC-002',
@@ -66,6 +77,16 @@ export const baseIncidents: Incident[] = [
     estado: 'abierto',
     linea: 'Línea 1',
     posicion: { lat: 19.4258, lng: -99.1682 },
+    detalles: [
+      'Flujo de ingreso +18% vs promedio.',
+      'Retrasos previos incrementan tiempo de espera.',
+      'Se observan filas hasta salida de torniquetes.',
+    ],
+    accionesSugeridas: [
+      'Solicitar apoyo de vigilancia para ordenar flujo.',
+      'Ajustar cadencia de trenes si es posible.',
+      'Enviar aviso por app a usuarios frecuentes.',
+    ],
   },
   {
     id: 'INC-003',
@@ -76,6 +97,16 @@ export const baseIncidents: Incident[] = [
     estado: 'abierto',
     linea: 'Línea 1',
     posicion: { lat: 19.4289, lng: -99.1221 },
+    detalles: [
+      'Sensor de cierre de puerta marca error intermitente.',
+      'Conductor reporta tiempo extra en cada estación.',
+      'Pasajeros tuvieron que cambiar de vagón.',
+    ],
+    accionesSugeridas: [
+      'Programar retiro del tren en siguiente terminal.',
+      'Coordinar técnico en andén para revisión rápida.',
+      'Actualizar ETA de trenes siguientes.',
+    ],
   },
   {
     id: 'INC-004',
@@ -86,6 +117,16 @@ export const baseIncidents: Incident[] = [
     estado: 'en camino',
     linea: 'Línea 1',
     posicion: { lat: 19.4328, lng: -99.1168 },
+    detalles: [
+      'CCTV detecta figura entre carriles 2 y 3.',
+      'Se activa protocolo de corte de corriente parcial.',
+      'Personal de seguridad se dirige al punto.',
+    ],
+    accionesSugeridas: [
+      'Confirmar corte de energía en tramo afectado.',
+      'Alertar a conductores en ambos sentidos.',
+      'Coordinar con policía para retiro seguro.',
+    ],
   },
   {
     id: 'INC-005',
@@ -96,5 +137,15 @@ export const baseIncidents: Incident[] = [
     estado: 'resuelto',
     linea: 'Línea 1',
     posicion: { lat: 19.3986, lng: -99.2009 },
+    detalles: [
+      'Ajuste de luminarias en señal de cambio de vía.',
+      'Se usó brigada nocturna para minimizar impacto.',
+      'Sin afectaciones al servicio reportadas.',
+    ],
+    accionesSugeridas: [
+      'Cerrar ticket con fotos finales.',
+      'Registrar repuesto utilizado en inventario.',
+      'Comunicar cierre en bitácora de mantenimiento.',
+    ],
   },
 ];

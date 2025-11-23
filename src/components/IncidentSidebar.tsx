@@ -1,6 +1,6 @@
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Incident } from '../types';
-import { ArrowUpRight, BoltIcon, FlameIcon } from './ui/icons';
+import { ArrowUpRight } from './ui/icons';
 
 type Props = {
   incidents: Incident[];
@@ -67,44 +67,6 @@ function IncidentSidebar({ incidents, selectedIncident, onSelect, isLoading, com
           ))}
       </div>
 
-      <AnimatePresence>
-        {selectedIncident && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            className="rounded-2xl border border-slate/60 bg-slate/30 p-4 space-y-3"
-          >
-            <div className="flex items-center gap-2">
-              <div className="h-10 w-10 rounded-xl bg-accent/10 border border-accent/40 grid place-items-center text-accent">
-                <FlameIcon className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm text-muted">{selectedIncident.hora}</p>
-                <p className="font-display font-semibold text-lg">{selectedIncident.tipo}</p>
-              </div>
-            </div>
-            <p className="text-sm text-white/90">{selectedIncident.descripcion}</p>
-            <div className="flex items-center gap-3 text-sm text-muted">
-              <StatusBadge status={selectedIncident.estado} />
-              <span className={`text-[11px] px-2 py-1 rounded-lg border ${severityColor[selectedIncident.severidad]}`}>
-                Severidad {selectedIncident.severidad}
-              </span>
-              <span className="px-2 py-1 rounded-lg border border-slate/50 text-xs">
-                {selectedIncident.linea}
-              </span>
-            </div>
-            <div className="bg-charcoal/60 rounded-xl p-3 border border-slate/60">
-              <p className="text-xs uppercase tracking-[0.15em] text-muted mb-2">Acciones sugeridas</p>
-              <ul className="text-sm space-y-2 text-white/90">
-                <li className="flex items-center gap-2"><BoltIcon className="h-4 w-4 text-accent" />Notificar a puesto de control</li>
-                <li className="flex items-center gap-2"><BoltIcon className="h-4 w-4 text-accent" />Coordinar equipo en sitio</li>
-                <li className="flex items-center gap-2"><BoltIcon className="h-4 w-4 text-accent" />Actualizar ETA y mensaje a usuarios</li>
-              </ul>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

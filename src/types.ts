@@ -10,6 +10,9 @@ export type Incident = {
   estado: IncidentStatus;
   linea: string;
   posicion: { lat: number; lng: number };
+  fotoUrl?: string;
+  detalles?: string[];
+  accionesSugeridas?: string[];
 };
 
 export type KPIResponse = {
